@@ -1,10 +1,12 @@
 import asyncio
-import aiofiles
 import json
-import pandas as pd
-import openai
 import os
-from typing import Dict, Any, List
+from typing import Any, Dict, List
+
+import openai
+import pandas as pd
+
+import app_json_async as _app_store
 from conversation_agent import PlanMyMealsState
 
 
@@ -50,32 +52,26 @@ Be enthusiastic, use emojis, and explain the nutritional benefits of each choice
 - Provide clear context about what information you need and why"""
 
     async def load_json_async(self, file_path: str) -> Dict[str, Any]:
-        """Load JSON file asynchronously"""
+        """Load app JSON (backed by SQLAlchemy for known document paths)."""
         try:
-            if os.path.exists(file_path):
-                async with aiofiles.open(file_path, 'r') as f:
-                    content = await f.read()
-                    return json.loads(content) if content.strip() else {}
-            return {}
+            return await _app_store.load_json_async(file_path)
         except Exception as e:
             print(f" Error loading {file_path}: {str(e)}")
             return {}
 
     async def save_json_async(self, file_path: str, data: Dict[str, Any]):
-        """Save JSON file asynchronously"""
+        """Save app JSON (backed by SQLAlchemy for known document paths)."""
         try:
-            async with aiofiles.open(file_path, 'w') as f:
-                await f.write(json.dumps(data, indent=2))
+            await _app_store.save_json_async(file_path, data)
             print(f" MealPlan saved {file_path}")
         except Exception as e:
             print(f" Error saving {file_path}: {str(e)}")
 
     async def load_datasets_async(self):
         """Load CSV datasets asynchronously using thread pool"""
-        loop = asyncio.get_event_loop()
-        
+        loop = asyncio.get_running_loop()
+
         try:
-            # Load calorie library
             if os.path.exists("calorie_library.csv"):
                 self.calorie_db = await loop.run_in_executor(None, pd.read_csv, "calorie_library.csv")
                 print(f" MealPlan: Loaded calorie_library.csv: {len(self.calorie_db)} recipes")

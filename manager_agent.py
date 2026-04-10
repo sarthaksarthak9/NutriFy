@@ -1,11 +1,12 @@
-
 import asyncio
-import aiofiles
 import json
 import os
-from typing import Dict, Any, List, Tuple, TypedDict
-import openai
 from datetime import datetime
+from typing import Any, Dict, List, Tuple, TypedDict
+
+import openai
+
+import app_json_async as _app_store
 from conversation_agent import PlanMyMealsState
 
 
@@ -134,39 +135,24 @@ Examples:
         asyncio.create_task(self.initialize_json_files_async())
 
     async def initialize_json_files_async(self):
-        """Initialize JSON files asynchronously if they don't exist"""
-        files_data = {
-            self.user_info_file: {},
-            self.task_info_file: {},
-            self.meal_log_file: {}
-        }
-        
-        for file_path, default_data in files_data.items():
-            if not os.path.exists(file_path):
-                try:
-                    async with aiofiles.open(file_path, 'w') as f:
-                        await f.write(json.dumps(default_data, indent=2))
-                    print(f"Manager: Created {file_path}")
-                except Exception as e:
-                    print(f"Manager: Error creating {file_path}: {str(e)}")
+        """Ensure SQLite-backed app documents exist (SQLAlchemy)."""
+        try:
+            await _app_store.init_app_storage()
+        except Exception as e:
+            print(f"Manager: Error initializing app storage: {str(e)}")
 
     async def load_json_async(self, file_path: str) -> Dict[str, Any]:
-        """Load JSON file asynchronously"""
+        """Load app JSON (backed by SQLAlchemy for known document paths)."""
         try:
-            if os.path.exists(file_path):
-                async with aiofiles.open(file_path, 'r') as f:
-                    content = await f.read()
-                    return json.loads(content) if content.strip() else {}
-            return {}
+            return await _app_store.load_json_async(file_path)
         except Exception as e:
             print(f" Manager: Error loading {file_path}: {str(e)}")
             return {}
 
     async def save_json_async(self, file_path: str, data: Dict[str, Any]):
-        """Save JSON file asynchronously"""
+        """Save app JSON (backed by SQLAlchemy for known document paths)."""
         try:
-            async with aiofiles.open(file_path, 'w') as f:
-                await f.write(json.dumps(data, indent=2))
+            await _app_store.save_json_async(file_path, data)
             print(f" Manager: Saved {file_path}")
         except Exception as e:
             print(f" Manager: Error saving {file_path}: {str(e)}")

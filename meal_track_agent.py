@@ -1,11 +1,13 @@
 import asyncio
-import aiofiles
 import json
 import os
+from datetime import date, datetime
+from typing import Any, Dict, List, Tuple
+
 import openai
 import pandas as pd
-from datetime import datetime, date
-from typing import Dict, Any, List, Tuple
+
+import app_json_async as _app_store
 from conversation_agent import PlanMyMealsState
 
 
@@ -23,41 +25,37 @@ class MealTrackAgent:
         self.indian_db = None
 
     async def load_json_async(self, file_path: str) -> Dict[str, Any]:
-        """Load JSON file asynchronously"""
+        """Load app JSON (backed by SQLAlchemy for known document paths)."""
         try:
-            if os.path.exists(file_path):
-                async with aiofiles.open(file_path, 'r') as f:
-                    content = await f.read()
-                    return json.loads(content) if content.strip() else {}
-            return {}
+            return await _app_store.load_json_async(file_path)
         except Exception as e:
             print(f" Error loading {file_path}: {str(e)}")
             return {}
 
     async def save_json_async(self, file_path: str, data: Dict[str, Any]):
-        """Save JSON file asynchronously"""
+        """Save app JSON (backed by SQLAlchemy for known document paths)."""
         try:
-            async with aiofiles.open(file_path, 'w') as f:
-                await f.write(json.dumps(data, indent=2))
+            await _app_store.save_json_async(file_path, data)
             print(f" MealTrack saved {file_path}")
         except Exception as e:
             print(f" Error saving {file_path}: {str(e)}")
 
     async def initialize_meal_log_async(self):
-        """Initialize meal log file"""
-        if not os.path.exists(self.meal_log_file):
-            default_log = {
+        """Ensure meal log document has required keys."""
+        meal_log = await self.load_json_async(self.meal_log_file)
+        if "meal_entries" not in meal_log or "daily_summaries" not in meal_log:
+            meal_log = {
                 "meal_entries": {},
                 "daily_summaries": {},
-                "last_updated": str(date.today())
+                "last_updated": str(date.today()),
             }
-            await self.save_json_async(self.meal_log_file, default_log)
-            print("MealTrack: Created user_meal_log.json")
+            await self.save_json_async(self.meal_log_file, meal_log)
+            print("MealTrack: Initialized meal log document")
 
     async def load_datasets_async(self):
         """Load food databases"""
-        loop = asyncio.get_event_loop()
-        
+        loop = asyncio.get_running_loop()
+
         try:
             if os.path.exists("calorie_library.csv"):
                 self.calorie_db = await loop.run_in_executor(None, pd.read_csv, "calorie_library.csv")

@@ -1,0 +1,15 @@
+# Database
+*.db
+*.sqlite
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Environment
+.env
+
+# Runtime data
+user_info.json
+task_info.json
+user_meal_log.json

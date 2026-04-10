@@ -1,5 +1,5 @@
 # NutriFy 🍽️  
-An AI-powered nutrition assistant system built with **LangGraph**, **FastAPI**, and **OpenAI GPT-4**, helping users create personalized meal plans and track their daily nutrition intake via a smart **Conversation Agent**.
+An AI-powered nutrition assistant built with **LangGraph**, **FastAPI**, **SQLAlchemy**, and **OpenAI GPT-4**, helping users create personalised meal plans and track their daily nutrition intake via a smart multi-agent conversation system.
 
 ## 🖼️ Preview: NutriFy – Meal Logging and Personalized Planning
 
@@ -25,10 +25,15 @@ _Users can track their daily meals effortlessly, with helpful feedback that keep
 
 ## Tech Stack
 
-- **Backend**: FastAPI  
-- **AI Agents**: LangGraph + OpenAI GPT-4  
-- **Interface**:  HTML-based (`index.html`)  
-- **Storage**: CSV-based Food & Recipe Databases
+| Layer | Technology |
+|-------|------------|
+| **Backend** | FastAPI (REST + WebSocket) |
+| **AI Agents** | LangGraph + OpenAI GPT-4 |
+| **Data Validation** | Pydantic v2 |
+| **Database ORM** | SQLAlchemy 2.x (SQLite via `nutrify.db`) |
+| **Async I/O** | Python `asyncio` + `asyncio.to_thread` for non-blocking DB access |
+| **Food Databases** | CSV — Calorie Library & Indian Recipes (private) |
+| **Interface** | HTML/JS (`static/index.html`) |
 
 
 ---
@@ -38,8 +43,8 @@ _Users can track their daily meals effortlessly, with helpful feedback that keep
 
 - **12 states** (as defined in the system's state machine)
 - **4 specialized agents**: Conversation, Manager, Meal Plan, Meal Track
-- **35+ structured JSON parameters** (across 3 config files)
-- **3 configuration files**: `user_info`, `task_info`, `meal_log`
+- **35+ structured parameters** (across 3 persisted documents)
+- **3 app documents stored in SQLite**: `user_info`, `task_info`, `meal_log`
 - **600+ food entries from 2 comprehensive databases**: Calorie Library & Indian Recipes
 
 
